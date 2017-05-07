@@ -1,4 +1,6 @@
+.DS_Store
 .vscode
 build
+cmake-build-debug
 tags
 .editorconfig
