@@ -28,12 +28,26 @@ std::string hasData(std::string s) {
   return "";
 }
 
-int main()
+int main(int argc, char *argv[])
 {
   uWS::Hub h;
 
+
   PID pid;
   // TODO: Initialize the pid variable.
+  double Kp, Ki, Kd;
+  Kp = 1.0;
+  Kd = 0.0;
+  Ki = 0.0;
+
+  if(argc == 4)
+  {
+    Kp = atof(argv[1]);
+    Ki = atof(argv[2]);
+    Kd = atof(argv[3]);
+  }
+  std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
+  pid.Init(Kp, Ki, Kd);
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -57,8 +71,25 @@ int main()
           * NOTE: Feel free to play around with the throttle and speed. Maybe use
           * another PID controller to control the speed!
           */
-          
-          // DEBUG
+
+          /*
+          0.05 0.0 0.0 - oscillation at curves
+          0.05 0.0 0.5 - good @ throttle=0.3 until steep turn
+          0.05 0.0001 0.25 - steep turn :(
+          0.05 0.0001 0.75 - navigated first steep turn
+          0.1 0.0002 0.75 - navigated full track @ thr=0.3 with some oscillation
+          0.1 0.0002 1.0 - navigated full track
+          0.5 0.0002 1.0 - unstable
+          0.1 0.0002 1.25 - still late turning
+          0.1 0.002 1.25 - some weaving bit within lines
+          0.075 0.005 1.25 - bad!
+          0.075 0.001 1.5 - works. Steering never saturates
+          0.075 0.001 2.5
+        )
+          */
+          pid.UpdateError(cte);
+          steer_value = -pid.Kp*pid.p_error - pid.Kd*pid.d_error - pid.Ki*pid.i_error;
+          steer_value = std::max(std::min(1.0, steer_value), -1.0);
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
 
           json msgJson;
@@ -111,4 +142,5 @@ int main()
     return -1;
   }
   h.run();
+  return 0;
 }
