@@ -34,22 +34,32 @@ int main(int argc, char *argv[])
 
 
   PID pid;
+  PID speedPid;
   // TODO: Initialize the pid variable.
   double Kp, Ki, Kd;
   Kp = 1.0;
   Kd = 0.0;
   Ki = 0.0;
 
-  if(argc == 4)
+  double set_speed;
+  set_speed = 50; // km/h
+  double throttle_Kp = 0.35;
+  if(argc >= 4)
   {
     Kp = atof(argv[1]);
     Ki = atof(argv[2]);
     Kd = atof(argv[3]);
+    if(argc > 4)
+    {
+      set_speed = atof(argv[4]);
+    }
   }
   std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
+  std::cout << "Speed = "<<set_speed<<" km/h";
   pid.Init(Kp, Ki, Kd);
+  speedPid.Init(throttle_Kp, 0, 0);
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&pid, &speedPid, set_speed](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -94,7 +104,14 @@ int main(int argc, char *argv[])
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+
+          double speed_error = set_speed - speed;
+          speedPid.UpdateError(speed_error);
+          double throttle = speedPid.Kp*speedPid.p_error +\
+                     speedPid.Kd*speedPid.d_error +\
+                     speedPid.Ki*speedPid.i_error;
+          throttle = std::max(-1.0, std::min(1.0, throttle));
+          msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
