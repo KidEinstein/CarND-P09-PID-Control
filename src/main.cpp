@@ -10,7 +10,8 @@
 0.1 0.002 1.25 - some weaving bit within lines
 0.075 0.005 1.25 - bad!
 0.075 0.001 1.5 - works. Steering never saturates
-0.1 0.001 4.0 - good.
+0.1 0.001 4.0 - better.
+0.5 0.0001 5.0 - good.
 )
 */
 
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
   // TODO: Initialize the pid variable.
   double Kp, Ki, Kd;
   Kp = 0.1;
-  Ki = 0.001;
+  Ki = 0.0001;
   Kd = 4.0;
 
   double set_speed;
