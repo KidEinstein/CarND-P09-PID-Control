@@ -1,3 +1,19 @@
+/*
+0.05 0.0 0.0 - oscillation at curves
+0.05 0.0 0.5 - good @ throttle=0.3 until steep turn
+0.05 0.0001 0.25 - steep turn :(
+0.05 0.0001 0.75 - navigated first steep turn
+0.1 0.0002 0.75 - navigated full track @ thr=0.3 with some oscillation
+0.1 0.0002 1.0 - navigated full track
+0.5 0.0002 1.0 - unstable
+0.1 0.0002 1.25 - still late turning
+0.1 0.002 1.25 - some weaving bit within lines
+0.075 0.005 1.25 - bad!
+0.075 0.001 1.5 - works. Steering never saturates
+0.075 0.001 2.5
+)
+*/
+
 #include <uWS/uWS.h>
 #include <iostream>
 #include "json.hpp"
@@ -37,12 +53,12 @@ int main(int argc, char *argv[])
   PID speedPid;
   // TODO: Initialize the pid variable.
   double Kp, Ki, Kd;
-  Kp = 1.0;
-  Kd = 0.0;
-  Ki = 0.0;
+  Kp = 0.075;
+  Kd = 0.001;
+  Ki = 1.5;
 
   double set_speed;
-  set_speed = 50; // km/h
+  set_speed = 25; // mph
   double throttle_Kp = 0.35;
   if(argc >= 4)
   {
@@ -54,8 +70,8 @@ int main(int argc, char *argv[])
       set_speed = atof(argv[4]);
     }
   }
-  std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
-  std::cout << "Speed = "<<set_speed<<" km/h";
+  // std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
+  // std::cout << "Speed = "<<set_speed<<" km/h"<<std::endl;
   pid.Init(Kp, Ki, Kd);
   speedPid.Init(throttle_Kp, 0, 0);
 
@@ -82,38 +98,27 @@ int main(int argc, char *argv[])
           * another PID controller to control the speed!
           */
 
-          /*
-          0.05 0.0 0.0 - oscillation at curves
-          0.05 0.0 0.5 - good @ throttle=0.3 until steep turn
-          0.05 0.0001 0.25 - steep turn :(
-          0.05 0.0001 0.75 - navigated first steep turn
-          0.1 0.0002 0.75 - navigated full track @ thr=0.3 with some oscillation
-          0.1 0.0002 1.0 - navigated full track
-          0.5 0.0002 1.0 - unstable
-          0.1 0.0002 1.25 - still late turning
-          0.1 0.002 1.25 - some weaving bit within lines
-          0.075 0.005 1.25 - bad!
-          0.075 0.001 1.5 - works. Steering never saturates
-          0.075 0.001 2.5
-        )
-          */
+
           pid.UpdateError(cte);
           steer_value = -pid.Kp*pid.p_error - pid.Kd*pid.d_error - pid.Ki*pid.i_error;
           steer_value = std::max(std::min(1.0, steer_value), -1.0);
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          // std::cout << "CTE: " << cte << " Steering Value: " << steer_value << std::endl;
+          std::cout<<"cte "<<cte<<std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
 
           double speed_error = set_speed - speed;
           speedPid.UpdateError(speed_error);
+
           double throttle = speedPid.Kp*speedPid.p_error +\
                      speedPid.Kd*speedPid.d_error +\
                      speedPid.Ki*speedPid.i_error;
           throttle = std::max(-1.0, std::min(1.0, throttle));
           msgJson["throttle"] = throttle;
+          std::cout<<throttle<<std::endl;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
@@ -159,5 +164,7 @@ int main(int argc, char *argv[])
     return -1;
   }
   h.run();
+  std::cout<<"foo";
+
   return 0;
 }

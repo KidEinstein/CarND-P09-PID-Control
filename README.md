@@ -2,6 +2,21 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Project Write-Up
+
+The PID gains were tuned manually. In order to facilitate this, command line arguments were used to override the built-in values. After several rounds of trial and error, the gains found were: Kp=0.075, Ki=0.001, Kd=5.0 for speeds up to 25 mph. The speed is controlled by a simple proportional gain controller. Some of the other gain values that were attempted are noted in comments at the top of `main.cpp`.
+
+The program can be run as follows:
+
+```
+./pid <Kp> <Ki> <Kd> <speed>
+```
+Example: `./pid 0.075 0.001 5.0 25`
+
+The approach used for tuning was to first find a value of Kp that was brought the car to the center-line but oscillated too much. Then Kd was tuned to reduced oscillation and then Ki to reduce steady-state error.
+
+An attempt was made at automating the gain tuning using `twiddle.py`. However, since there is no easy way to reset/restart the simulation from an external program, this was not pursued any further.
+
 
 ## Dependencies
 
@@ -25,7 +40,7 @@ Self-Driving Car Engineer Nanodegree Program
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
-4. Run it: `./pid`. 
+4. Run it: `./pid`.
 
 ## Editor Settings
 
