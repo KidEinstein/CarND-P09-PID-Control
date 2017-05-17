@@ -10,7 +10,7 @@
 0.1 0.002 1.25 - some weaving bit within lines
 0.075 0.005 1.25 - bad!
 0.075 0.001 1.5 - works. Steering never saturates
-0.075 0.001 2.5
+0.1 0.001 4.0 - good.
 )
 */
 
@@ -53,9 +53,9 @@ int main(int argc, char *argv[])
   PID speedPid;
   // TODO: Initialize the pid variable.
   double Kp, Ki, Kd;
-  Kp = 0.075;
-  Kd = 0.001;
-  Ki = 1.5;
+  Kp = 0.1;
+  Ki = 0.001;
+  Kd = 4.0;
 
   double set_speed;
   set_speed = 25; // mph
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
       set_speed = atof(argv[4]);
     }
   }
-  // std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
+  std::cout << "Running PID with gains Kp="<<Kp<<", Ki="<<Ki<<", Kd="<<Kd<<std::endl;
   // std::cout << "Speed = "<<set_speed<<" km/h"<<std::endl;
   pid.Init(Kp, Ki, Kd);
   speedPid.Init(throttle_Kp, 0, 0);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
                      speedPid.Ki*speedPid.i_error;
           throttle = std::max(-1.0, std::min(1.0, throttle));
           msgJson["throttle"] = throttle;
-          std::cout<<throttle<<std::endl;
+
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
